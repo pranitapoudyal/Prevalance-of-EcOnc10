@@ -1,0 +1,21 @@
+
+OUTPUT=/srv/scratch/lanlab/Pranita/outputs/NonShigeStec
+cd $OUTPUT
+FP=/srv/scratch/lanlab2/read_data/xiaomei/2-nonshigeistec-read/ECOLI_nonshistec-8576/*_1.fastq.gz
+FILES=($FP)
+arrayno=${#FILES[@]}
+let arrayno=$arrayno-1
+
+start=8400
+stop=$arrayno
+step=200
+
+for ((i = start; i <= stop; i += step)); do
+    current_start=$i
+    current_stop=$((i + step - 1))
+  qsub -W block=true -v FILES=$FP,OUTPUT=$OUTPUT -J "$current_start-$current_stop" /srv/scratch/lanlab/Pranita/kma_gene_collection/test_commandsPPfq.pbs
+    echo $current_start
+done
+
+
+#qsub -v FILES=$FP,OUTPUT=$OUTPUT -J 0-10 /srv/scratch/lanlab/Pranita/test_commandsPPfq.pbs

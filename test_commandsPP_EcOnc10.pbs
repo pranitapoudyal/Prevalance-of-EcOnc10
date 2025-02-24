@@ -1,0 +1,45 @@
+#!/bin/bash
+#PBS -N kmarun
+#PBS -l select=1:ncpus=1
+#PBS -l mem=10gb
+#PBS -l walltime=12:00:00
+
+source /srv/scratch/lanlab/michael/miniconda_newkatana/bin/activate kma
+
+# ARRAY MAPPING
+
+FILES=($FILES)
+OUTPUT=${OUTPUT}
+SPRINGFILE=${FILES[${PBS_ARRAY_INDEX}]}
+
+bname=$(basename $SPRINGFILE)
+name=${bname/.spring/}
+
+#SET VARIABLES
+
+OUTFILE=$OUTPUT"/"$name""_kma_out
+STECOUT=$OUTPUT"/"$name""_stec_out
+SHIGOUT=$OUTPUT"/"$name""_shig_out
+
+TMPFOLDER=/srv/scratch/lanlab/Pranita/processing_tmp/
+
+F1=$TMPFOLDER"/"$name"_1.fastq.gz"
+F2=$TMPFOLDER"/"$name"_2.fastq.gz"
+
+KMADB=/srv/scratch/lanlab/Pranita/kma_gene_collection/Reference_gene.fasta
+
+#decompress
+
+spring -d -o $F1 $F2 -i $SPRINGFILE -w $TMPFOLDER -g
+
+#KMA,Shigeifinder, STECfinder
+
+kma -mct 0.001 -ipe $F1 $F2 -t_db $KMADB -t 1 -ConClave 2 -ID 30 -vcf -o $OUTFILE
+
+stecfinder -i $F1 $F2 -r -t 1 --hits --output $STECOUT
+
+shigeifinder -r -i $F1 $F2 --hits --dratio --output $SHIGOUT --tmpdir $TMPFOLDER
+
+#remove reads 
+rm $F1
+rm $F2
